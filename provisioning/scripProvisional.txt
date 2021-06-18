@@ -1,0 +1,83 @@
+sed -i 's/ControlMachine=/ControlMachine=sms/g' /etc/slurm/slurm.conf
+sed -i 's/NodeName=c\[1\-4\] Sockets=2 CoresPerSocket=8 ThreadsPerCore=2/NodeName=c\[1\-2\] Sockets=1 CoresPerSocket=1 ThreadsPerCore=1/g' /etc/slurm/slurm.conf
+sed -i 's/Nodes=c\[1\-4\]/Nodes=c\[1\-2\]/g' /etc/slurm/slurm.conf
+
+#3.7
+perl -pi -e "s/^\s+disable\s+= yes/ disable = no/" /etc/xinetd.d/tftp
+ifconfig eth1 192.168.44.11 netmask 255.255.255.0 up
+
+systemctl restart xinetd
+systemctl enable mariadb.service
+systemctl restart mariadb
+systemctl enable httpd.service
+systemctl restart httpd
+systemctl enable dhcpd.service
+
+
+#3.8.1
+export CHROOT=/opt/ohpc/admin/images/centos7.7
+wwmkchroot centos-7 $CHROOT
+
+#3.8.2
+yum -y --installroot=$CHROOT install ohpc-base-compute
+cp -p /etc/resolv.conf $CHROOT/etc/resolv.conf
+
+# O --installroot instala na ruta concreta 
+yum -y --installroot=$CHROOT install ohpc-slurm-client
+yum -y --installroot=$CHROOT install ntp
+yum -y --installroot=$CHROOT install kernel
+yum -y --installroot=$CHROOT install lmod-ohpc
+
+#3.8.3
+wwinit database
+wwinit ssh_keys
+
+echo "192.168.44.11:/home /home nfs nfsvers=3,nodev,nosuid 0 0" >> $CHROOT/etc/fstab
+echo "192.168.44.11:/opt/ohpc/pub /opt/ohpc/pub nfs nfsvers=3,nodev 0 0" >> $CHROOT/etc/fstab
+
+echo "/home *(rw,no_subtree_check,fsid=10,no_root_squash)" >> /etc/exports
+echo "/opt/ohpc/pub *(ro,no_subtree_check,fsid=11)" >> /etc/exports
+exportfs -a
+systemctl restart nfs-server
+systemctl enable nfs-server
+
+chroot $CHROOT systemctl enable ntpd
+echo "server 192.168.44.11" >> $CHROOT/etc/ntp.conf
+
+
+#3.8.5
+wwsh file import /etc/passwd
+wwsh file import /etc/group
+wwsh file import /etc/shadow
+
+wwsh file import /etc/slurm/slurm.conf
+wwsh file import /etc/munge/munge.key
+
+# Opcional (infini band)
+# wwsh file import /opt/ohpc/pub/examples/network/centos/ifcfg-ib0.ww
+# wwsh -y file set ifcfg-ib0.ww --path=/etc/sysconfig/network-scripts/ifcfg-ib0
+
+# 3.9
+
+# 3.9.1
+wwbootstrap `uname -r`
+
+# 3.9.2
+wwvnfs --chroot $CHROOT
+
+# 3.9.2
+# Set provisioning interface as the default networking device
+echo "GATEWAYDEV=eth1" > /tmp/network.$$
+wwsh -y file import /tmp/network.$$ --name network
+wwsh -y file set network --path /etc/sysconfig/network --mode=0644 --uid=0
+
+# Add nodes to Warewulf data store
+c_name=(c1 c2)
+num_computes=2
+c_mac=(080027CB726A 0800276A567B)
+c_ip=(192.168.44.21 192.168.44.22)
+
+for ((i=0; i<$num_computes; i++)) ; do
+	wwsh -y node new ${c_name[i]} --ipaddr=${c_ip[i]} --hwaddr=${c_mac[i]} -D eth1
+done
+

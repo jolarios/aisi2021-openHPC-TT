@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "sms" do |sms|
     sms.vm.hostname = "sms"
 
-    sms.vm.network :private_network, ip:"192.168.44.11", virtualbox__intnet: true, virtualbox__intnet: "management"
+    sms.vm.network :private_network, ip:"192.168.44.11", virtualbox__intnet: true, virtualbox__intnet: "management" #:mac => "5CA1AB1E0001"
     sms.vm.network :private_network, ip:"192.168.33.11", virtualbox__intnet: true, virtualbox__intnet: "computing"
     sms.vm.network :private_network, ip:"192.168.66.11", virtualbox__intnet: true, virtualbox__intnet: "bmc"
     
