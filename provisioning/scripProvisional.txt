@@ -1,3 +1,14 @@
+
+yum install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm
+
+
+# Install base meta-packages
+systemctl enable ntpd.service
+echo "server pool.ntp.org" >> /etc/ntp.conf
+systemctl restart ntpd
+
+yum -y install ohpc-slurm-server
+
 sed -i 's/ControlMachine=/ControlMachine=sms/g' /etc/slurm/slurm.conf
 sed -i 's/NodeName=c\[1\-4\] Sockets=2 CoresPerSocket=8 ThreadsPerCore=2/NodeName=c\[1\-2\] Sockets=1 CoresPerSocket=1 ThreadsPerCore=1/g' /etc/slurm/slurm.conf
 sed -i 's/Nodes=c\[1\-4\]/Nodes=c\[1\-2\]/g' /etc/slurm/slurm.conf
@@ -74,10 +85,17 @@ wwsh -y file set network --path /etc/sysconfig/network --mode=0644 --uid=0
 # Add nodes to Warewulf data store
 c_name=(c1 c2)
 num_computes=2
-c_mac=(080027CB726A 0800276A567B)
+c_mac=(08:00:27:CB:72:6A 08:00:27:6A:56:7B)
 c_ip=(192.168.44.21 192.168.44.22)
 
 for ((i=0; i<$num_computes; i++)) ; do
 	wwsh -y node new ${c_name[i]} --ipaddr=${c_ip[i]} --hwaddr=${c_mac[i]} -D eth1
 done
 
+wwsh -y provision set "c*" --vnfs=centos7.7 --bootstrap=`uname -r` --files=dynamic_hosts,passwd,group,shadow,slurm.conf,munge.key,network
+
+# Restart dhcp /update PXE
+systemctl restart dhcpd
+wwsh pxe update
+
+# 3.10
