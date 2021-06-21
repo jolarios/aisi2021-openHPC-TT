@@ -1,3 +1,7 @@
+sudo su
+echo "192.168.44.11 sms" >> /etc/hosts
+systemctl disable firewalld
+systemctl stop firewalld
 
 yum install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm
 
@@ -48,6 +52,7 @@ echo "192.168.44.11:/opt/ohpc/pub /opt/ohpc/pub nfs nfsvers=3,nodev 0 0" >> $CHR
 
 echo "/home *(rw,no_subtree_check,fsid=10,no_root_squash)" >> /etc/exports
 echo "/opt/ohpc/pub *(ro,no_subtree_check,fsid=11)" >> /etc/exports
+
 exportfs -a
 systemctl restart nfs-server
 systemctl enable nfs-server
