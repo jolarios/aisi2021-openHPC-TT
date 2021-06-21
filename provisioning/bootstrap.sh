@@ -5,10 +5,14 @@ echo "192.168.44.11 sms" >> /etc/hosts
 systemctl disable firewalld
 systemctl stop firewalld
 
-yum install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm
+yum -y install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm
 
 
 # Install base meta-packages
+yum -y install ohpc-base
+yum -y install ohpc-warewulf
+
+
 systemctl enable ntpd.service
 echo "server pool.ntp.org" >> /etc/ntp.conf
 systemctl restart ntpd
@@ -71,12 +75,7 @@ wwsh file import /etc/shadow
 wwsh file import /etc/slurm/slurm.conf
 wwsh file import /etc/munge/munge.key
 
-# Opcional (infini band)
-# wwsh file import /opt/ohpc/pub/examples/network/centos/ifcfg-ib0.ww
-# wwsh -y file set ifcfg-ib0.ww --path=/etc/sysconfig/network-scripts/ifcfg-ib0
-
 # 3.9
-
 # 3.9.1
 wwbootstrap `uname -r`
 
@@ -107,7 +106,7 @@ wwsh pxe update
 
 # Inicio manual das máquinas
 
-# 4.2
+# 4.1
 yum -y install ohpc-autotools
 yum -y install EasyBuild-ohpc
 yum -y install hwloc-ohpc
@@ -136,3 +135,8 @@ systemctl start munge
 systemctl start slurmctld
 # Start slurm clients on compute hosts
 # pdsh -w c[1-4] systemctl start slurmd
+
+# 4.6
+# Install parallel lib meta-packages for all available MPI toolchains
+yum -y install ohpc-gnu8-mpich-parallel-libs
+yum -y install ohpc-gnu8-openmpi3-parallel-libs
