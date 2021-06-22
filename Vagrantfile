@@ -11,7 +11,7 @@ Vagrant.configure("2") do |config|
   config.hostmanager.ignore_private_ip = false
   config.vbguest.auto_update = false
 
-  config.vm.provision "shell", path: "./provisioning/bootstrap.sh"
+  config.vm.provision "shell", path: "./provisioning/bootstrap.sh", privileged: true
 
   config.vm.define "sms" do |sms|
     sms.vm.hostname = "sms"

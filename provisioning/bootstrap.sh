@@ -1,7 +1,5 @@
 #!/bin/sh
 
-sudo su
-echo "192.168.44.11 sms" >> /etc/hosts
 systemctl disable firewalld
 systemctl stop firewalld
 
@@ -19,7 +17,7 @@ systemctl restart ntpd
 
 yum -y install ohpc-slurm-server
 
-sed -i 's/ControlMachine=/ControlMachine=sms/g' /etc/slurm/slurm.conf
+perl -pi -e "s/ControlMachine=\S+/ControlMachine=sms/" /etc/slurm/slurm.conf
 sed -i 's/NodeName=c\[1\-4\] Sockets=2 CoresPerSocket=8 ThreadsPerCore=2/NodeName=c\[1\-2\] Sockets=1 CoresPerSocket=1 ThreadsPerCore=1/g' /etc/slurm/slurm.conf
 sed -i 's/Nodes=c\[1\-4\]/Nodes=c\[1\-2\]/g' /etc/slurm/slurm.conf
 
@@ -124,10 +122,12 @@ yum -y install openmpi3-gnu8-ohpc mpich-gnu8-ohpc
 yum -y install mvapich2-gnu8-ohpc
 yum -y install mvapich2-psm2-gnu8-ohpc
 
-
+# 4.6
+# Install parallel lib meta-packages for all available MPI toolchains
+yum -y install ohpc-gnu8-mpich-parallel-libs
+yum -y install ohpc-gnu8-openmpi3-parallel-libs
 
 # 5
-
 # Start munge and slurm controller on master host
 systemctl enable munge
 systemctl enable slurmctld
@@ -136,7 +136,6 @@ systemctl start slurmctld
 # Start slurm clients on compute hosts
 # pdsh -w c[1-4] systemctl start slurmd
 
-# 4.6
-# Install parallel lib meta-packages for all available MPI toolchains
-yum -y install ohpc-gnu8-mpich-parallel-libs
-yum -y install ohpc-gnu8-openmpi3-parallel-libs
+# Carga mpicc
+# module load gnu8
+# module load openmpi3
