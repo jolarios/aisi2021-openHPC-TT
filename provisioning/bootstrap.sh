@@ -12,7 +12,7 @@ yum -y install ohpc-warewulf
 
 
 systemctl enable ntpd.service
-echo "server pool.ntp.org" >> /etc/ntp.conf
+echo "server es.pool.ntp.org" >> /etc/ntp.conf
 systemctl restart ntpd
 
 yum -y install ohpc-slurm-server
@@ -20,6 +20,7 @@ yum -y install ohpc-slurm-server
 perl -pi -e "s/ControlMachine=\S+/ControlMachine=sms/" /etc/slurm/slurm.conf
 sed -i 's/NodeName=c\[1\-4\] Sockets=2 CoresPerSocket=8 ThreadsPerCore=2/NodeName=c\[1\-2\] Sockets=1 CoresPerSocket=1 ThreadsPerCore=1/g' /etc/slurm/slurm.conf
 sed -i 's/Nodes=c\[1\-4\]/Nodes=c\[1\-2\]/g' /etc/slurm/slurm.conf
+sed -i 's/#ControlAddr=/ControlAddr=sms/g' /etc/slurm/slurm.conf
 
 #3.7
 perl -pi -e "s/^\s+disable\s+= yes/ disable = no/" /etc/xinetd.d/tftp
@@ -80,20 +81,20 @@ wwbootstrap `uname -r`
 # 3.9.2
 wwvnfs --chroot $CHROOT
 
-# 3.9.2
+# 3.9.3
 # Set provisioning interface as the default networking device
-echo "GATEWAYDEV=eth1" > /tmp/network.$$
+echo "GATEWAYDEV=eth0" > /tmp/network.$$
 wwsh -y file import /tmp/network.$$ --name network
 wwsh -y file set network --path /etc/sysconfig/network --mode=0644 --uid=0
 
 # Add nodes to Warewulf data store
 c_name=(c1 c2)
 num_computes=2
-c_mac=(08:00:27:CB:72:6A 08:00:27:6A:56:7B)
+c_mac=(08:00:27:CB:72:6A 08:00:27:6A:56:7B) # C1: 080027CB726A C2: 0800276A567B
 c_ip=(192.168.44.21 192.168.44.22)
 
 for ((i=0; i<$num_computes; i++)) ; do
-	wwsh -y node new ${c_name[i]} --ipaddr=${c_ip[i]} --hwaddr=${c_mac[i]} -D eth1
+	wwsh -y node new ${c_name[i]} --ipaddr=${c_ip[i]} --hwaddr=${c_mac[i]} -D eth0
 done
 
 wwsh -y provision set "c*" --vnfs=centos7.7 --bootstrap=`uname -r` --files=dynamic_hosts,passwd,group,shadow,slurm.conf,munge.key,network
@@ -134,7 +135,7 @@ systemctl enable slurmctld
 systemctl start munge
 systemctl start slurmctld
 # Start slurm clients on compute hosts
-# pdsh -w c[1-4] systemctl start slurmd
+# pdsh -w c[1-2] systemctl start slurmd
 
 # Carga mpicc
 # module load gnu8

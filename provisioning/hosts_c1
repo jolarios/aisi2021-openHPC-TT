@@ -1,0 +1,19 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+127.0.1.1 c1.localdomain c1 c1-eth0.localdomain c1-eth0
+
+## vagrant-hostmanager-start
+192.168.44.11	sms
+
+## vagrant-hostmanager-end
+
+### ALL ENTRIES BELOW THIS LINE WILL BE OVERWRITTEN BY WAREWULF ###
+#
+# See provision.conf for configuration paramaters
+
+
+# Node Entry for node: c1 (ID=9)
+192.168.44.21           c1.localdomain c1 c1-eth0.localdomain c1-eth0
+
+# Node Entry for node: c2 (ID=11)
+192.168.44.22           c2.localdomain c2 c2-eth0.localdomain c2-eth0
